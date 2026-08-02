@@ -1,0 +1,100 @@
+---
+# ------------------------------------------------------------------
+# 1. SSH Hardening Verification
+# ------------------------------------------------------------------
+- name: Verify SSH port 22 is listening
+  ansible.builtin.wait_for:
+    port: 22
+    state: started
+    timeout: 5
+
+- name: Validate sshd configuration file syntax
+  ansible.builtin.command: sshd -t
+  register: sshd_syntax_check
+  changed_when: false
+  failed_when: sshd_syntax_check.rc != 0
+
+- name: Gather effective SSH runtime configuration
+  ansible.builtin.command: sshd -T
+  register: sshd_runtime_config
+  changed_when: false
+
+- name: Assert SSH security settings
+  ansible.builtin.assert:
+    that:
+      - "'permitrootlogin no' in sshd_runtime_config.stdout_lines | map('lower') | list"
+      - "'passwordauthentication no' in sshd_runtime_config.stdout_lines | map('lower') | list"
+      - "'pubkeyauthentication yes' in sshd_runtime_config.stdout_lines | map('lower') | list"
+      - "'permitemptypasswords no' in sshd_runtime_config.stdout_lines | map('lower') | list"
+    fail_msg: "SSH security settings failed compliance check!"
+    success_msg: "SSH daemon is properly hardened"
+
+- name: Gather SSH service status
+  ansible.builtin.systemd:
+    name: ssh
+  register: ssh_svc
+  check_mode: false
+
+- name: Assert SSH is active and enabled at boot
+  ansible.builtin.assert:
+    that:
+      - ssh_svc.status.ActiveState == "active"
+      - ssh_svc.status.UnitFileState == "enabled"
+    fail_msg: >
+      SSH not active/enabled.
+      ActiveState={{ ssh_svc.status.ActiveState }},
+      UnitFileState={{ ssh_svc.status.UnitFileState }}
+    success_msg: "SSH service is active and enabled at boot"
+
+# ------------------------------------------------------------------
+# 2. UFW Firewall Verification
+# ------------------------------------------------------------------
+- name: Gather UFW status verbose
+  ansible.builtin.command: ufw status verbose
+  register: ufw_status
+  changed_when: false
+
+- name: Assert UFW is active with default deny incoming
+  ansible.builtin.assert:
+    that:
+      - "'Status: active' in ufw_status.stdout"
+      - "'Default: deny (incoming)' in ufw_status.stdout"
+    fail_msg: "UFW is either inactive or not defaulting to deny incoming"
+
+- name: Assert SSH (22) is allowed in UFW rules
+  ansible.builtin.assert:
+    that:
+      - "'22/tcp' in ufw_status.stdout or 'OpenSSH' in ufw_status.stdout"
+    fail_msg: "SSH port is missing from active UFW rules"
+
+# ------------------------------------------------------------------
+# 3. Fail2ban Verification
+# ------------------------------------------------------------------
+- name: Assert Fail2ban is installed, active, and enabled
+  ansible.builtin.assert:
+    that:
+      - "'fail2ban' in ansible_facts.packages"
+      - ansible_facts.services['fail2ban.service'] is defined
+      - ansible_facts.services['fail2ban.service'].state == 'running'
+      - ansible_facts.services['fail2ban.service'].status == 'enabled'
+    fail_msg: "Fail2ban is either uninstalled or not running/enabled"
+
+# ------------------------------------------------------------------
+# 4. Unattended Upgrades Verification
+# ------------------------------------------------------------------
+- name: Assert unattended-upgrades package is installed
+  ansible.builtin.assert:
+    that:
+      - "'unattended-upgrades' in ansible_facts.packages"
+
+- name: Read APT auto-upgrades configuration
+  ansible.builtin.slurp:
+    src: /etc/apt/apt.conf.d/20auto-upgrades
+  register: apt_periodic_content
+
+- name: Assert periodic security updates are configured
+  ansible.builtin.assert:
+    that:
+      - "'APT::Periodic::Update-Package-Lists \"1\";' in (apt_periodic_content.content | b64decode)"
+      - "'APT::Periodic::Unattended-Upgrade \"1\";' in (apt_periodic_content.content | b64decode)"
+    fail_msg: "/etc/apt/apt.conf.d/20auto-upgrades missing expected periodic update settings"

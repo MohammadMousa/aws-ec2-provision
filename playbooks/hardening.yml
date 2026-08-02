@@ -1,0 +1,116 @@
+---
+- name: Harden the EC2 instance (SSH, UFW, Fail2ban, Unattended Upgrades)
+  hosts: webservers
+  become: yes
+
+  tasks:
+    # -------------------------------------------------------------------
+    # 1. SSH Hardening – improve sshd_config security
+    #    We use 'lineinfile' to ensure the settings are present.
+    #    The handler restarts sshd only if any change is made.
+    # -------------------------------------------------------------------
+    - name: Disable SSH root login
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PermitRootLogin'
+        line: 'PermitRootLogin no'
+      notify: restart ssh
+
+    - name: Disable SSH password authentication (keys only)
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+      notify: restart ssh
+
+    - name: Disable empty passwords
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PermitEmptyPasswords'
+        line: 'PermitEmptyPasswords no'
+      notify: restart ssh
+
+    - name: Ensure SSH service is running and enabled
+      ansible.builtin.service:
+        name: ssh
+        state: started
+        enabled: yes
+
+    # -------------------------------------------------------------------
+    # 2. UFW Firewall – install, configure rules, then enable
+    #    Order is critical: allow SSH before enabling UFW!
+    # -------------------------------------------------------------------
+    - name: Install UFW
+      ansible.builtin.apt:
+        name: ufw
+        state: present
+        update_cache: yes
+
+    - name: Allow SSH through UFW
+      community.general.ufw:
+        rule: allow
+        port: '22'
+        proto: tcp
+
+    - name: Allow HTTP and HTTPS (for web servers)
+      community.general.ufw:
+        rule: allow
+        port: '80,443'
+        proto: tcp
+      # This rule is safe even if web servers aren't installed yet.
+      # If you don't plan to use Apache/Nginx, comment it out.
+
+    - name: Enable UFW and set default incoming policy to deny
+      community.general.ufw:
+        state: enabled
+        policy: deny
+        direction: incoming
+
+    # -------------------------------------------------------------------
+    # 3. Fail2ban – protects against brute-force attacks
+    # -------------------------------------------------------------------
+    - name: Install fail2ban
+      ansible.builtin.apt:
+        name: fail2ban
+        state: present
+
+    - name: Ensure fail2ban is running and enabled at boot
+      ansible.builtin.service:
+        name: fail2ban
+        state: started
+        enabled: yes
+
+    # -------------------------------------------------------------------
+    # 4. Unattended Upgrades – automatically install security updates
+    # -------------------------------------------------------------------
+    - name: Install unattended-upgrades
+      ansible.builtin.apt:
+        name: unattended-upgrades
+        state: present
+
+    - name: Configure unattended-upgrades to install security updates
+      ansible.builtin.template:
+        src: 50unattended-upgrades.j2
+        dest: /etc/apt/apt.conf.d/50unattended-upgrades
+        owner: root
+        group: root
+        mode: '0644'
+      # No handler needed; unattended-upgrades is a background service.
+
+    - name: Enable periodic update/upgrade timers (APT::Periodic)
+      ansible.builtin.copy:
+        content: |
+          APT::Periodic::Update-Package-Lists "1";
+          APT::Periodic::Download-Upgradeable-Packages "1";
+          APT::Periodic::AutocleanInterval "7";
+          APT::Periodic::Unattended-Upgrade "1";
+        dest: /etc/apt/apt.conf.d/20auto-upgrades
+        owner: root
+        group: root
+        mode: '0644'
+
+  handlers:
+    - name: restart ssh
+      ansible.builtin.service:
+        name: ssh
+        state: restarted

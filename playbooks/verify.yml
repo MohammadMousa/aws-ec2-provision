@@ -1,0 +1,28 @@
+---
+- name: Master System Verification Suite
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Gather service and package facts upfront
+      ansible.builtin.service_facts:
+    
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+        manager: apt
+
+    # --- Run Verification Tasks ---
+    - name: Run baseline OS assertions
+      ansible.builtin.import_tasks: ../tasks/verify/common.yml
+
+    - name: Run security & hardening assertions
+      ansible.builtin.import_tasks: ../tasks/verify/hardening.yml
+
+    - name: Run Java assertions
+      ansible.builtin.import_tasks: ../tasks/verify/java.yml
+      when: "'openjdk-21-jdk' in ansible_facts.packages or 'default-jre' in ansible_facts.packages"
+
+    - name: Run Web assertions
+      ansible.builtin.import_tasks: ../tasks/verify/web.yml
+      when: "'nginx.service' in ansible_facts.services or 'apache2.service' in ansible_facts.services"

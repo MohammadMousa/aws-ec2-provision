@@ -1,0 +1,21 @@
+---
+# ------------------------------------------------------------------
+# Java Runtime Verification
+# ------------------------------------------------------------------
+- name: Check Java executable in PATH
+  ansible.builtin.command: which java
+  register: java_path
+  changed_when: false
+  failed_when: java_path.rc != 0
+
+- name: Get Java version output
+  ansible.builtin.command: java -version
+  register: java_version_raw
+  changed_when: false
+
+- name: Assert Java version meets requirements
+  ansible.builtin.assert:
+    that:
+      - "(desired_java_version | default('21')) in java_version_raw.stderr"
+    fail_msg: "Expected Java version '{{ desired_java_version | default('21') }}', got: {{ java_version_raw.stderr_lines[0] }}"
+    success_msg: "Java version verified: {{ java_version_raw.stderr_lines[0] }}"
