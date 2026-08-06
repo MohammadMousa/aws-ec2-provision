@@ -26,3 +26,7 @@
     - name: Run Web assertions
       ansible.builtin.import_tasks: ../tasks/verify/web.yml
       when: "'nginx.service' in ansible_facts.services or 'apache2.service' in ansible_facts.services"
+
+    - name: Run mail service checks
+      ansible.builtin.import_tasks: ../tasks/verify/mail.yml
+      when: "'webservers' in group_names or 'all' in group_names"   # adjust as needed

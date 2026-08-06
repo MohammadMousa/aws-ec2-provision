@@ -1,0 +1,59 @@
+---
+- name: Kill stale dpkg locks
+  ansible.builtin.shell: |
+    fuser -k /var/lib/dpkg/lock-frontend /var/lib/apt/lists/lock 2>/dev/null || true
+    rm -f /var/lib/dpkg/lock-frontend /var/lib/apt/lists/lock
+  changed_when: false
+
+- name: Preseed Postfix mailer type
+  ansible.builtin.debconf:
+    name: postfix
+    question: postfix/main_mailer_type
+    value: 'Satellite system'
+    vtype: select
+
+- name: Preseed Postfix mailname
+  ansible.builtin.debconf:
+    name: postfix
+    question: postfix/mailname
+    value: "{{ postfix_mailname }}"
+    vtype: string
+
+- name: Install Postfix and mail utilities
+  ansible.builtin.apt:
+    name:
+      - postfix
+      - mailutils
+    state: present
+    update_cache: yes
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+  notify: restart postfix
+
+- name: Create transport map for local delivery
+  ansible.builtin.copy:
+    content: "{{ postfix_hostname }} local:"
+    dest: /etc/postfix/transport
+    owner: root
+    group: root
+    mode: '0644'
+  notify: compile transport map
+
+- name: Compile transport map
+  ansible.builtin.command: postmap /etc/postfix/transport
+  changed_when: false
+
+- name: Deploy Postfix main.cf
+  ansible.builtin.template:
+    src: postfix_main.cf.j2
+    dest: /etc/postfix/main.cf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart postfix
+
+- name: Ensure Postfix is running and enabled
+  ansible.builtin.service:
+    name: postfix
+    state: started
+    enabled: yes

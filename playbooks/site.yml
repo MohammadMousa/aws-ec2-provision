@@ -1,0 +1,27 @@
+---
+- name: Apply common system updates
+  hosts: all
+  become: yes
+  roles:
+    - common
+
+- name: Configure web servers
+  hosts: webservers
+  become: yes
+  roles:
+    - java
+    # pick the webserver you want apache vs nginx
+    #- apache
+    - nginx
+
+- name: Apply security hardening
+  hosts: all
+  become: yes
+  roles:
+    - hardening
+
+- name: Set up system mail
+  hosts: all
+  become: yes
+  roles:
+    - mail
