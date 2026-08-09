@@ -66,4 +66,4 @@ venv/
 Thumbs.db
 
 # Local inventory
-inventory/hosts.ini
+ansible/inventory/hosts.ini
