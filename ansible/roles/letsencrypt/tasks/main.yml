@@ -87,7 +87,7 @@
       vars:
         cert_exists: true
       when: letsencrypt_webserver == 'nginx' and letsencrypt_certbot_result is changed
-      notify: reload webserver
+      notify: Reload webserver
 
     - name: Ensure the certbot renewal timer is enabled and running
       ansible.builtin.systemd:

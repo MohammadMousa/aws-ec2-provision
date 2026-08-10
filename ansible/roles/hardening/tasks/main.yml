@@ -17,21 +17,21 @@
     path: /etc/ssh/sshd_config
     regexp: ^#?\s*PermitRootLogin
     line: PermitRootLogin no
-  notify: restart ssh
+  notify: Restart ssh
 
 - name: Disable SSH password authentication
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: ^#?\s*PasswordAuthentication
     line: PasswordAuthentication no
-  notify: restart ssh
+  notify: Restart ssh
 
 - name: Disable empty passwords
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
     regexp: ^#?\s*PermitEmptyPasswords
     line: PermitEmptyPasswords no
-  notify: restart ssh
+  notify: Restart ssh
 
 - name: Ensure SSH service is running and enabled
   ansible.builtin.service:

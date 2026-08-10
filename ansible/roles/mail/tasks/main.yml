@@ -28,7 +28,7 @@
     update_cache: true
   environment:
     DEBIAN_FRONTEND: falseninteractive
-  notify: restart postfix
+  notify: Restart postfix
 
 - name: Create transport map for local delivery
   ansible.builtin.copy:
@@ -37,7 +37,7 @@
     owner: root
     group: root
     mode: "0644"
-  notify: compile transport map
+  notify: Compile transport map
 
 - name: Compile transport map
   ansible.builtin.command: postmap /etc/postfix/transport
@@ -50,7 +50,7 @@
     owner: root
     group: root
     mode: "0644"
-  notify: restart postfix
+  notify: Restart postfix
 
 - name: Ensure Postfix is running and enabled
   ansible.builtin.service:

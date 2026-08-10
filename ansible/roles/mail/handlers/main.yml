@@ -1,10 +1,10 @@
 ---
-- name: Compile transport map
-  ansible.builtin.command: postmap /etc/postfix/transport
-  changed_when: false
-  notify: restart postfix
+- name: Restart postfix
+  ansible.builtin.service:
+    name: postfix
+    state: restarted
 
 - name: Compile transport map
   ansible.builtin.command: postmap /etc/postfix/transport
   changed_when: false
-  notify: restart postfix
+  notify: Restart postfix
