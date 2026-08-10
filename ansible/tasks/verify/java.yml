@@ -16,6 +16,6 @@
 - name: Assert Java version meets requirements
   ansible.builtin.assert:
     that:
-      - "(desired_java_version | default('21')) in java_version_raw.stderr"
+      - (desired_java_version | default('21')) in java_version_raw.stderr
     fail_msg: "Expected Java version '{{ desired_java_version | default('21') }}', got: {{ java_version_raw.stderr_lines[0] }}"
     success_msg: "Java version verified: {{ java_version_raw.stderr_lines[0] }}"

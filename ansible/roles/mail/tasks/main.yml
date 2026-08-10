@@ -9,7 +9,7 @@
   ansible.builtin.debconf:
     name: postfix
     question: postfix/main_mailer_type
-    value: 'Satellite system'
+    value: Satellite system
     vtype: select
 
 - name: Preseed Postfix mailname
@@ -25,9 +25,9 @@
       - postfix
       - mailutils
     state: present
-    update_cache: yes
+    update_cache: true
   environment:
-    DEBIAN_FRONTEND: noninteractive
+    DEBIAN_FRONTEND: falseninteractive
   notify: restart postfix
 
 - name: Create transport map for local delivery
@@ -36,7 +36,7 @@
     dest: /etc/postfix/transport
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
   notify: compile transport map
 
 - name: Compile transport map
@@ -49,11 +49,11 @@
     dest: /etc/postfix/main.cf
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
   notify: restart postfix
 
 - name: Ensure Postfix is running and enabled
   ansible.builtin.service:
     name: postfix
     state: started
-    enabled: yes
+    enabled: true

@@ -4,19 +4,19 @@
   block:
     - name: Fail fast if no domains are configured
       ansible.builtin.fail:
-        msg: "letsencrypt_domains must contain at least one domain that resolves to this host"
+        msg: letsencrypt_domains must contain at least one domain that resolves to this host
       when: letsencrypt_domains | length == 0
 
     - name: Install certbot
       ansible.builtin.apt:
         name: certbot
         state: present
-        update_cache: yes
+        update_cache: true
 
     - name: Ensure UFW allows HTTPS (443/tcp)
       community.general.ufw:
         rule: allow
-        port: '443'
+        port: "443"
         proto: tcp
 
     - name: Ensure ACME challenge webroot directory exists
@@ -25,12 +25,12 @@
         state: directory
         owner: www-data
         group: www-data
-        mode: '0755'
+        mode: "0755"
       when: letsencrypt_webserver == 'nginx'
 
     - name: Check whether a certificate already exists for the primary domain
       ansible.builtin.stat:
-        path: "/etc/letsencrypt/live/{{ letsencrypt_domains[0] }}/fullchain.pem"
+        path: /etc/letsencrypt/live/{{ letsencrypt_domains[0] }}/fullchain.pem
       register: cert_file
 
     - name: Deploy nginx site config (Ansible-owned — certbot never edits this file)
@@ -39,7 +39,7 @@
         dest: /etc/nginx/sites-available/default
         owner: root
         group: root
-        mode: '0644'
+        mode: "0644"
       vars:
         cert_exists: "{{ cert_file.stat.exists }}"
       when: letsencrypt_webserver == 'nginx'
@@ -49,7 +49,7 @@
         src: /etc/nginx/sites-available/default
         dest: /etc/nginx/sites-enabled/default
         state: link
-        force: yes
+        force: true
       when: letsencrypt_webserver == 'nginx'
 
     - name: Confirm nginx config is valid
@@ -73,7 +73,7 @@
         --email {{ letsencrypt_email }}
         {{ letsencrypt_domain_args }}
         {{ '--staging' if letsencrypt_staging else '' }}
-      when: not cert_file.stat.exists
+      when: falset cert_file.stat.exists
       register: certbot_result
       changed_when: "'Congratulations' in certbot_result.stdout or 'Successfully received certificate' in certbot_result.stdout"
 
@@ -83,7 +83,7 @@
         dest: /etc/nginx/sites-available/default
         owner: root
         group: root
-        mode: '0644'
+        mode: "0644"
       vars:
         cert_exists: true
       when: letsencrypt_webserver == 'nginx' and certbot_result is changed
@@ -92,7 +92,7 @@
     - name: Ensure the certbot renewal timer is enabled and running
       ansible.builtin.systemd:
         name: certbot.timer
-        enabled: yes
+        enabled: true
         state: started
 
     - name: Install deploy hook to reload the web server after renewal
@@ -100,7 +100,7 @@
         dest: /etc/letsencrypt/renewal-hooks/deploy/reload-webserver.sh
         owner: root
         group: root
-        mode: '0755'
+        mode: "0755"
         content: |
           #!/bin/bash
           systemctl reload {{ letsencrypt_webserver }}

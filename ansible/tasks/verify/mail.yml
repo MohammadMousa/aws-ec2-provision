@@ -1,8 +1,6 @@
 ---
-
 - name: Populate service facts (if not already done)
   ansible.builtin.service_facts:
-
 - name: Assert Postfix package is installed
   ansible.builtin.package_facts:
     manager: apt
@@ -10,8 +8,8 @@
 - name: Postfix binary exists
   ansible.builtin.assert:
     that: "'postfix' in ansible_facts.packages"
-    fail_msg: "Postfix package is not installed"
-    success_msg: "Postfix package installed"
+    fail_msg: Postfix package is not installed
+    success_msg: Postfix package installed
 
 - name: Assert Postfix service is running and enabled
   ansible.builtin.assert:
@@ -19,8 +17,8 @@
       - "'postfix.service' in ansible_facts.services"
       - ansible_facts.services['postfix.service'].state == 'running'
       - ansible_facts.services['postfix.service'].status == 'enabled'
-    fail_msg: "Postfix service is not running/enabled"
-    success_msg: "Postfix service is running and enabled"
+    fail_msg: Postfix service is not running/enabled
+    success_msg: Postfix service is running and enabled
 
 - name: Send test mail and wait for delivery
   ansible.builtin.shell: |
@@ -40,5 +38,5 @@
     that:
       - "'Verify Postfix' in mail_test.stdout"
       - "'Ansible verification test mail' in mail_test.stdout"
-    fail_msg: "Test mail was not delivered to /var/mail/root"
-    success_msg: "Local mail delivery verified"
+    fail_msg: Test mail was not delivered to /var/mail/root
+    success_msg: Local mail delivery verified

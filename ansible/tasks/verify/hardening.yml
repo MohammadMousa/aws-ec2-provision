@@ -26,8 +26,8 @@
       - "'passwordauthentication no' in sshd_runtime_config.stdout_lines | map('lower') | list"
       - "'pubkeyauthentication yes' in sshd_runtime_config.stdout_lines | map('lower') | list"
       - "'permitemptypasswords no' in sshd_runtime_config.stdout_lines | map('lower') | list"
-    fail_msg: "SSH security settings failed compliance check!"
-    success_msg: "SSH daemon is properly hardened"
+    fail_msg: SSH security settings failed compliance check!
+    success_msg: SSH daemon is properly hardened
 
 - name: Gather SSH service status
   ansible.builtin.systemd:
@@ -44,7 +44,7 @@
       SSH not active/enabled.
       ActiveState={{ ssh_svc.status.ActiveState }},
       UnitFileState={{ ssh_svc.status.UnitFileState }}
-    success_msg: "SSH service is active and enabled at boot"
+    success_msg: SSH service is active and enabled at boot
 
 # ------------------------------------------------------------------
 # 2. UFW Firewall Verification
@@ -59,13 +59,13 @@
     that:
       - "'Status: active' in ufw_status.stdout"
       - "'Default: deny (incoming)' in ufw_status.stdout"
-    fail_msg: "UFW is either inactive or not defaulting to deny incoming"
+    fail_msg: UFW is either inactive or not defaulting to deny incoming
 
 - name: Assert SSH (22) is allowed in UFW rules
   ansible.builtin.assert:
     that:
       - "'22/tcp' in ufw_status.stdout or 'OpenSSH' in ufw_status.stdout"
-    fail_msg: "SSH port is missing from active UFW rules"
+    fail_msg: SSH port is missing from active UFW rules
 
 # ------------------------------------------------------------------
 # 3. Fail2ban Verification
@@ -77,7 +77,7 @@
       - ansible_facts.services['fail2ban.service'] is defined
       - ansible_facts.services['fail2ban.service'].state == 'running'
       - ansible_facts.services['fail2ban.service'].status == 'enabled'
-    fail_msg: "Fail2ban is either uninstalled or not running/enabled"
+    fail_msg: Fail2ban is either uninstalled or not running/enabled
 
 # ------------------------------------------------------------------
 # 4. Unattended Upgrades Verification
@@ -97,4 +97,4 @@
     that:
       - "'APT::Periodic::Update-Package-Lists \"1\";' in (apt_periodic_content.content | b64decode)"
       - "'APT::Periodic::Unattended-Upgrade \"1\";' in (apt_periodic_content.content | b64decode)"
-    fail_msg: "/etc/apt/apt.conf.d/20auto-upgrades missing expected periodic update settings"
+    fail_msg: /etc/apt/apt.conf.d/20auto-upgrades missing expected periodic update settings

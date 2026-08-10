@@ -1,13 +1,13 @@
 ---
 - name: Apply common system updates
   hosts: all
-  become: yes
+  become: true
   roles:
     - common
 
 - name: Configure web servers
   hosts: webservers
-  become: yes
+  become: true
   roles:
     - java
     # pick the webserver you want apache vs nginx
@@ -16,18 +16,18 @@
 
 - name: Apply security hardening
   hosts: all
-  become: yes
+  become: true
   roles:
     - hardening
 
 - name: Set up system mail
   hosts: all
-  become: yes
+  become: true
   roles:
     - mail
 
 - name: Set up Let's Encrypt
   hosts: all
-  become: yes
+  become: true
   roles:
     - letsencrypt

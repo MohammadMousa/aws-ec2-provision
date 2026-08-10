@@ -6,5 +6,5 @@
   ansible.builtin.assert:
     that:
       - ansible_os_family == "Debian"
-    fail_msg: "Expected Debian/Ubuntu, but target host is {{ ansible_os_family }}"
+    fail_msg: Expected Debian/Ubuntu, but target host is {{ ansible_os_family }}
     success_msg: "OS family verified: {{ ansible_distribution }} {{ ansible_distribution_version }}"

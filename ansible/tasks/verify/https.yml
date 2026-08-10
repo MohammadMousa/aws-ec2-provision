@@ -11,15 +11,15 @@
 
     - name: Check certificate file exists for the primary domain
       ansible.builtin.stat:
-        path: "/etc/letsencrypt/live/{{ letsencrypt_domains[0] }}/fullchain.pem"
+        path: /etc/letsencrypt/live/{{ letsencrypt_domains[0] }}/fullchain.pem
       register: cert_file
 
     - name: Assert certificate file is present
       ansible.builtin.assert:
         that:
           - cert_file.stat.exists
-        fail_msg: "No certificate found at /etc/letsencrypt/live/{{ letsencrypt_domains[0] }}/fullchain.pem"
-        success_msg: "All assertions passed"
+        fail_msg: No certificate found at /etc/letsencrypt/live/{{ letsencrypt_domains[0] }}/fullchain.pem
+        success_msg: All assertions passed
 
     - name: Read certificate expiry date
       ansible.builtin.command: >
@@ -38,5 +38,5 @@
         that:
           - certbot_timer.status.ActiveState == "active"
           - certbot_timer.status.UnitFileState == "enabled"
-        fail_msg: "certbot.timer is not active/enabled — automatic renewal won't run"
+        fail_msg: certbot.timer is not active/enabled — automatic renewal won't run
         success_msg: "certbot.timer is active and enabled: {{ cert_expiry.stdout }}"

@@ -3,7 +3,7 @@
   ansible.builtin.apt:
     name: apache2
     state: present
-    update_cache: yes
+    update_cache: true
 
 - name: Copy custom index.html
   ansible.builtin.copy:
@@ -11,11 +11,11 @@
     dest: /var/www/html/index.html
     owner: www-data
     group: www-data
-    mode: '0644'
+    mode: "0644"
   notify: restart apache
 
 - name: Ensure Apache is running and enabled
   ansible.builtin.service:
     name: apache2
     state: started
-    enabled: yes
+    enabled: true

@@ -10,13 +10,14 @@
 
 - name: Determine active web service name
   ansible.builtin.set_fact:
-    active_web_service: "{{ 'nginx.service' if 'nginx.service' in ansible_facts.services else ('apache2.service' if 'apache2.service' in ansible_facts.services else 'none') }}"
+    active_web_service: "{{ 'nginx.service' if 'nginx.service' in ansible_facts.services else ('apache2.service' if 'apache2.service' in ansible_facts.services else\
+      \ 'none') }}"
 
 - name: Assert at least one supported web service is detected
   ansible.builtin.assert:
     that:
       - active_web_service != 'none'
-    fail_msg: "Neither Nginx nor Apache service was detected on target host"
+    fail_msg: Neither Nginx nor Apache service was detected on target host
 
 - name: Assert web service is active and enabled
   ansible.builtin.assert:
@@ -38,5 +39,5 @@
       - http_response.status == 200
       - "'text/html' in http_response.content_type"
       - http_response.content | length > 0
-    fail_msg: "HTTP health check failed or returned invalid response"
+    fail_msg: HTTP health check failed or returned invalid response
     success_msg: "Web server is responding with HTTP 200 OK (Content-Type: {{ http_response.content_type }})"

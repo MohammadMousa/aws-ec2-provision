@@ -1,7 +1,7 @@
 ---
 - name: Update apt cache
   ansible.builtin.apt:
-    update_cache: yes
+    update_cache: true
     cache_valid_time: 3600
 
 - name: Install required packages
@@ -15,40 +15,40 @@
 - name: Disable SSH root login
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
-    regexp: '^#?\s*PermitRootLogin'
-    line: 'PermitRootLogin no'
+    regexp: ^#?\s*PermitRootLogin
+    line: PermitRootLogin no
   notify: restart ssh
 
 - name: Disable SSH password authentication
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
-    regexp: '^#?\s*PasswordAuthentication'
-    line: 'PasswordAuthentication no'
+    regexp: ^#?\s*PasswordAuthentication
+    line: PasswordAuthentication no
   notify: restart ssh
 
 - name: Disable empty passwords
   ansible.builtin.lineinfile:
     path: /etc/ssh/sshd_config
-    regexp: '^#?\s*PermitEmptyPasswords'
-    line: 'PermitEmptyPasswords no'
+    regexp: ^#?\s*PermitEmptyPasswords
+    line: PermitEmptyPasswords no
   notify: restart ssh
 
 - name: Ensure SSH service is running and enabled
   ansible.builtin.service:
     name: ssh
     state: started
-    enabled: yes
+    enabled: true
 
 - name: Allow SSH through UFW
   community.general.ufw:
     rule: allow
-    port: '22'
+    port: "22"
     proto: tcp
 
 - name: Allow HTTP and HTTPS
   community.general.ufw:
     rule: allow
-    port: '80,443'
+    port: 80,443
     proto: tcp
 
 - name: Enable UFW and set default deny incoming
@@ -61,7 +61,7 @@
   ansible.builtin.service:
     name: fail2ban
     state: started
-    enabled: yes
+    enabled: true
 
 - name: Deploy unattended-upgrades config
   ansible.builtin.template:
@@ -69,7 +69,7 @@
     dest: /etc/apt/apt.conf.d/50unattended-upgrades
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
 
 - name: Enable periodic updates
   ansible.builtin.copy:
@@ -81,4 +81,4 @@
     dest: /etc/apt/apt.conf.d/20auto-upgrades
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"

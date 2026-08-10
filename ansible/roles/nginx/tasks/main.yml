@@ -3,7 +3,7 @@
   ansible.builtin.apt:
     name: nginx
     state: present
-    update_cache: yes
+    update_cache: true
 
 - name: Deploy index.html from template
   ansible.builtin.template:
@@ -15,4 +15,4 @@
   ansible.builtin.service:
     name: nginx
     state: started
-    enabled: yes
+    enabled: true
