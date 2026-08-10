@@ -1,0 +1,40 @@
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name {{ letsencrypt_domains | join(' ') }} _;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+{% if cert_exists %}
+    location / {
+        return 301 https://$host$request_uri;
+    }
+{% else %}
+    root /var/www/html;
+    index index.html index.htm;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+{% endif %}
+}
+{% if cert_exists %}
+
+server {
+    listen 443 ssl default_server;
+    listen [::]:443 ssl default_server;
+    server_name {{ letsencrypt_domains | join(' ') }};
+
+    ssl_certificate     /etc/letsencrypt/live/{{ letsencrypt_domains[0] }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ letsencrypt_domains[0] }}/privkey.pem;
+
+    root /var/www/html;
+    index index.html index.htm;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+{% endif %}

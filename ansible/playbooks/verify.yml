@@ -30,3 +30,6 @@
     - name: Run mail service checks
       ansible.builtin.import_tasks: ../tasks/verify/mail.yml
       when: "'webservers' in group_names or 'all' in group_names"   # adjust as needed
+
+    - name: Run Let's Encrypt
+      ansible.builtin.import_tasks: ../tasks/verify/https.yml

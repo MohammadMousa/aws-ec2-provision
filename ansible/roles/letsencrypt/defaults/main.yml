@@ -1,0 +1,20 @@
+---
+# Email used for Let's Encrypt urgent renewal/security notices
+letsencrypt_email: "you@example.com"
+
+# One or more domains that already resolve (DNS A record) to this instance's
+# public IP. The first domain in the list is treated as primary.
+letsencrypt_domains: []
+
+# Which web server role is active on this host: "apache" or "nginx"
+letsencrypt_webserver: "nginx"
+
+# Set to true once you've confirmed DNS is pointed at the instance and you're
+# ready to actually request a certificate. Kept false by default so this role
+# is safe to include in site.yml without accidentally hitting Let's Encrypt's
+# rate limits during testing.
+letsencrypt_enabled: false
+
+# Use Let's Encrypt's staging environment first (unlimited-ish rate limits,
+# but the cert isn't trusted by browsers). Flip to false for the real cert.
+letsencrypt_staging: true

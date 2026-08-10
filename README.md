@@ -64,6 +64,7 @@ aws-ec2-provision/
 * [x] Automated verification suite
 * [x] Modular verification tasks
 * [x] Ansible roles structure
+* [x] HTTPS with Let's Encrypt
 
 ### In Progress
 * [ ] Terraform AWS infrastructure provisioning
@@ -72,7 +73,6 @@ aws-ec2-provision/
 
 ### Planned
 * [ ] Apache Virtual Hosts
-* [ ] HTTPS with Let's Encrypt
 * [ ] MySQL installation and configuration
 * [ ] PHP installation
 * [ ] WordPress deployment

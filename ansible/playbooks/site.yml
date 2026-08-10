@@ -25,3 +25,9 @@
   become: yes
   roles:
     - mail
+
+- name: Set up Let's Encrypt
+  hosts: all
+  become: yes
+  roles:
+    - letsencrypt

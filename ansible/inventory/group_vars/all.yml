@@ -1,0 +1,9 @@
+postfix_hostname: "{{ ansible_facts.fqdn }}"
+postfix_mailname: "{{ postfix_hostname }}"
+postfix_relayhost: ""      # empty = local delivery only
+
+letsencrypt_email: "mohammad_mousa79@yahoo.com"
+letsencrypt_domains: ["waha1.duckdns.org"]
+letsencrypt_webserver: "nginx"   # or "apache" — whichever role you actually deploy
+letsencrypt_enabled: true
+letsencrypt_staging: false        # flip to false once staging succeeds

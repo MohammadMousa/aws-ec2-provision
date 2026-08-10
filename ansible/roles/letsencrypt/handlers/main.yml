@@ -1,0 +1,5 @@
+---
+- name: reload webserver
+  ansible.builtin.systemd:
+    name: "{{ letsencrypt_webserver }}"
+    state: reloaded

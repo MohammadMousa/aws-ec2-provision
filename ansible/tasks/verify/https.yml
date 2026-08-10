@@ -1,0 +1,42 @@
+---
+- name: Let's Encrypt / HTTPS verification
+  when: letsencrypt_enabled | default(false)
+  block:
+    - name: Verify HTTPS port 443 is listening
+      ansible.builtin.wait_for:
+        port: 443
+        host: 127.0.0.1
+        timeout: 5
+      register: https_port
+
+    - name: Check certificate file exists for the primary domain
+      ansible.builtin.stat:
+        path: "/etc/letsencrypt/live/{{ letsencrypt_domains[0] }}/fullchain.pem"
+      register: cert_file
+
+    - name: Assert certificate file is present
+      ansible.builtin.assert:
+        that:
+          - cert_file.stat.exists
+        fail_msg: "No certificate found at /etc/letsencrypt/live/{{ letsencrypt_domains[0] }}/fullchain.pem"
+        success_msg: "All assertions passed"
+
+    - name: Read certificate expiry date
+      ansible.builtin.command: >
+        openssl x509 -enddate -noout
+        -in /etc/letsencrypt/live/{{ letsencrypt_domains[0] }}/fullchain.pem
+      register: cert_expiry
+      changed_when: false
+
+    - name: Assert certbot renewal timer is active and enabled
+      ansible.builtin.systemd:
+        name: certbot.timer
+      register: certbot_timer
+
+    - name: Assert renewal timer state
+      ansible.builtin.assert:
+        that:
+          - certbot_timer.status.ActiveState == "active"
+          - certbot_timer.status.UnitFileState == "enabled"
+        fail_msg: "certbot.timer is not active/enabled — automatic renewal won't run"
+        success_msg: "certbot.timer is active and enabled: {{ cert_expiry.stdout }}"
