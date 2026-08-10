@@ -3,6 +3,11 @@ name: Deploy to EC2
 on:
   workflow_dispatch:
 
+# Prevents simultaneous deployment runs against web-2
+concurrency:
+  group: production-ec2-deploy
+  cancel-in-progress: false
+
 jobs:
   deploy-and-verify:
     runs-on: ubuntu-latest
@@ -17,27 +22,43 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.11'
+          cache: 'pip'
 
-      - name: Install Ansible
-        run: pip install ansible
+      - name: Install Ansible (Pinned)
+        run: |
+          python -m pip install --upgrade pip
+          pip install "ansible-core==2.16.*"
 
       - name: Install required collections
         run: ansible-galaxy collection install community.general
 
-      - name: Set up SSH key
+      - name: Set up SSH key safely
+        env:
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          KNOWN_HOSTS: ${{ secrets.EC2_KNOWN_HOSTS }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 700 ~/.ssh
+          
+          # Write SSH Key securely
+          echo "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
+          
+          # Use verified static fingerprint instead of dynamic ssh-keyscan
+          echo "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
 
-      - name: Generate inventory
+      - name: Generate temporary inventory
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
         run: |
           cat > /tmp/ci-inventory.ini <<INV
           [web]
-          web-2 ansible_host=${{ secrets.EC2_HOST }} ansible_user=${{ secrets.SSH_USER }} ansible_ssh_private_key_file=~/.ssh/deploy_key
+          web-2 ansible_host=${EC2_HOST} ansible_user=${SSH_USER} ansible_ssh_private_key_file=~/.ssh/deploy_key
           INV
+          chmod 600 /tmp/ci-inventory.ini
 
       - name: Run site.yml
         run: ansible-playbook -i /tmp/ci-inventory.ini playbooks/site.yml
@@ -47,3 +68,10 @@ jobs:
 
       - name: Run HTTPS verification
         run: ansible-playbook -i /tmp/ci-inventory.ini playbooks/http_verify.yml
+
+      # Post-execution cleanup for key security
+      - name: Clean up temporary keys and inventory
+        if: always()
+        run: |
+          rm -f ~/.ssh/deploy_key
+          rm -f /tmp/ci-inventory.ini
