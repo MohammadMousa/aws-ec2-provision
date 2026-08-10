@@ -1,4 +1,4 @@
 ---
-postfix_hostname: "{{ ansible_facts.fqdn }}"
-postfix_mailname: "{{ postfix_hostname }}"
-postfix_relayhost: ""
+mail_mail_postfix_hostname: "{{ ansible_facts.fqdn }}"
+mail_mail_postfix_mailname: "{{ mail_postfix_hostname }}"
+mail_mail_postfix_relayhost: ""

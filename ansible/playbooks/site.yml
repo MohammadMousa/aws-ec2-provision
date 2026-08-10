@@ -11,7 +11,7 @@
   roles:
     - java
     # pick the webserver you want apache vs nginx
-    #- apache
+    # - apache
     - nginx
 
 - name: Apply security hardening

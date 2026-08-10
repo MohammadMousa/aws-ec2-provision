@@ -31,7 +31,7 @@
     - name: Check whether a certificate already exists for the primary domain
       ansible.builtin.stat:
         path: /etc/letsencrypt/live/{{ letsencrypt_domains[0] }}/fullchain.pem
-      register: cert_file
+      register: letsencrypt_cert_file
 
     - name: Deploy nginx site config (Ansible-owned — certbot never edits this file)
       ansible.builtin.template:
@@ -41,7 +41,7 @@
         group: root
         mode: "0644"
       vars:
-        cert_exists: "{{ cert_file.stat.exists }}"
+        cert_exists: "{{ letsencrypt_cert_file.stat.exists }}"
       when: letsencrypt_webserver == 'nginx'
 
     - name: Ensure sites-enabled/default is a symlink to sites-available/default
@@ -73,9 +73,9 @@
         --email {{ letsencrypt_email }}
         {{ letsencrypt_domain_args }}
         {{ '--staging' if letsencrypt_staging else '' }}
-      when: falset cert_file.stat.exists
-      register: certbot_result
-      changed_when: "'Congratulations' in certbot_result.stdout or 'Successfully received certificate' in certbot_result.stdout"
+      when: not letsencrypt_cert_file.stat.exists
+      register: letsencrypt_certbot_result
+      changed_when: "'Congratulations' in letsencrypt_certbot_result.stdout or 'Successfully received certificate' in letsencrypt_certbot_result.stdout"
 
     - name: Re-deploy nginx site config now that the cert exists, to add the HTTPS block
       ansible.builtin.template:
@@ -86,7 +86,7 @@
         mode: "0644"
       vars:
         cert_exists: true
-      when: letsencrypt_webserver == 'nginx' and certbot_result is changed
+      when: letsencrypt_webserver == 'nginx' and letsencrypt_certbot_result is changed
       notify: reload webserver
 
     - name: Ensure the certbot renewal timer is enabled and running

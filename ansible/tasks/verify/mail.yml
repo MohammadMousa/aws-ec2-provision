@@ -22,6 +22,7 @@
 
 - name: Send test mail and wait for delivery
   ansible.builtin.shell: |
+    set -o pipefail
     echo "Ansible verification test mail at $(date)" | mail -s "Verify Postfix" root
     for i in $(seq 1 10); do
       if [ -s /var/mail/root ]; then

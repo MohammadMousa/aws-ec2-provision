@@ -10,8 +10,10 @@
 
 - name: Determine active web service name
   ansible.builtin.set_fact:
-    active_web_service: "{{ 'nginx.service' if 'nginx.service' in ansible_facts.services else ('apache2.service' if 'apache2.service' in ansible_facts.services else\
-      \ 'none') }}"
+    active_web_service: >-
+      {{ 'nginx.service' if 'nginx.service' in ansible_facts.services
+         else ('apache2.service' if 'apache2.service' in ansible_facts.services
+         else 'none') }}
 
 - name: Assert at least one supported web service is detected
   ansible.builtin.assert:
