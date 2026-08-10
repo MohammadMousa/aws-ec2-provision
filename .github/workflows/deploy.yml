@@ -1,0 +1,49 @@
+name: Deploy to EC2
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-and-verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ansible
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Ansible
+        run: pip install ansible
+
+      - name: Install required collections
+        run: ansible-galaxy collection install community.general
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Generate inventory
+        run: |
+          cat > /tmp/ci-inventory.ini <<INV
+          [web]
+          web-2 ansible_host=${{ secrets.EC2_HOST }} ansible_user=${{ secrets.SSH_USER }} ansible_ssh_private_key_file=~/.ssh/deploy_key
+          INV
+
+      - name: Run site.yml
+        run: ansible-playbook -i /tmp/ci-inventory.ini playbooks/site.yml
+
+      - name: Run verification suite
+        run: ansible-playbook -i /tmp/ci-inventory.ini playbooks/verify.yml
+
+      - name: Run HTTPS verification
+        run: ansible-playbook -i /tmp/ci-inventory.ini playbooks/http_verify.yml

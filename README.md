@@ -65,11 +65,14 @@ aws-ec2-provision/
 * [x] Modular verification tasks
 * [x] Ansible roles structure
 * [x] HTTPS with Let's Encrypt
+* [x] Master `site.yml` playbook
+* [x] Ansible lint integration
+* [x] CI pipeline (ansible-lint on push)
 
 ### In Progress
 * [ ] Terraform AWS infrastructure provisioning
 * [ ] Terraform → Ansible integration
-* [ ] Master `site.yml` playbook
+* [ ] Full CI/CD with ephemeral test instance
 
 ### Planned
 * [ ] Apache Virtual Hosts
