@@ -16,7 +16,7 @@
   ansible.builtin.debconf:
     name: postfix
     question: postfix/mailname
-    value: "{{ mail_postfix_mailname }}"
+    value: "{{ mail_mailname }}"
     vtype: string
 
 - name: Install Postfix and mail utilities
@@ -32,7 +32,7 @@
 
 - name: Create transport map for local delivery
   ansible.builtin.copy:
-    content: "{{ mail_postfix_hostname }} local:"
+    content: "{{ mail_hostname }} local:"
     dest: /etc/postfix/transport
     owner: root
     group: root
